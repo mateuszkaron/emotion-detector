@@ -12,6 +12,7 @@ BATCH_SIZE = 32
 IMG_SIZE = (48, 48)
 model = tf.keras.models.load_model("models/emotion_model.h5")
 class_names = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
+predicted_class = ''
 
 # Find path to the dataset
 project_path = os.path.dirname(os.path.abspath(__file__))
@@ -54,30 +55,28 @@ while True:
         print("Error: Could not read frame.")
         break
 
-    # Konwertuj obraz do szarości
+    # Convert the frame to grayscale and resize it
     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-    
-    # Dopasuj rozmiar obrazu do 48x48
     resized = cv.resize(gray, IMG_SIZE)
-
-    # Normalizuj obraz
     normalized = resized / 255.0
-
-    # Dodaj wymiar dla batch (1 zdjęcie)
     input_image = normalized.reshape(1, IMG_SIZE[0], IMG_SIZE[1], 1)
 
-    # Predykcja
-    pred = model.predict(input_image)
-    predicted_class = class_names[np.argmax(pred)]
+    display_frame = frame.copy()
+
+    # Update emotion with 'e'
+    key = cv.waitKey(1) & 0xFF
+    if key == ord('e'):
+        pred = model.predict(input_image)
+        predicted_class = class_names[np.argmax(pred)]
     
-    # Rysowanie tekstu na obrazie
-    cv.putText(frame, f"Emocja: {predicted_class}", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-
-    # Wyświetlanie obrazu na ekranie
-    cv.imshow('Live Emotion Recognition', frame)
-
-    # Przerwij, jeśli naciśniesz 'q'
-    if cv.waitKey(1) & 0xFF == ord('q'):
+    if predicted_class:
+        cv.putText(display_frame, f"Emocja: {predicted_class}", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+    
+    
+    cv.imshow('Live Emotion Recognition', display_frame)
+        
+    # Stop with 'q'
+    if key == ord('q'):
         break
 
-cap.release()
+cap.release() 
