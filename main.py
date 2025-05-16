@@ -1,82 +1,90 @@
-# TensorFlow and tf.keras imports
 import tensorflow as tf
-
-# Helper liblaries
 import os
+import time 
 import cv2 as cv
 import numpy as np
-import matplotlib.pyplot as plt
 
-# Variables
-BATCH_SIZE = 32
+# Zmienne
 IMG_SIZE = (48, 48)
-model = tf.keras.models.load_model("models/emotion_model.h5")
-class_names = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
-predicted_class = ''
+MODEL_PATH = "models/emotion_model_v0.03.h5"
+emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fearful", 3: "Happy", 4: "Neutral", 5: "Sad", 6: "Surprised"}
+predicted_emotion = ''
+emotion_timestamp = 0
+display_duration = 3 
+last_face_coords = None
 
-# Find path to the dataset
-project_path = os.path.dirname(os.path.abspath(__file__))
+# wczytanie modelu z MODEL_PATH
+model = tf.keras.models.load_model(MODEL_PATH)
 
-train_path = os.path.join(project_path, "data", "train")
-test_path = os.path.join(project_path, "data", "test")
+# filtr na obraz
+def apply_old_tv_filter(frame):
+    noise = np.random.normal(0, 25, frame.shape).astype(np.uint8)
+    frame = cv.addWeighted(frame, 0.9, noise, 0.1, 0)
 
-if not os.path.exists(train_path):
-    print(f"Train path does not exist: {train_path}")
-if not os.path.exists(test_path):
-    print(f"Test path does not exist: {test_path}")
+    for i in range(0, frame.shape[0], 2):
+        frame[i, :] = frame[i, :] * 0.8
 
-# Load the dataset
-train_ds = tf.keras.utils.image_dataset_from_directory(
-    train_path,
-    image_size=IMG_SIZE,
-    color_mode="grayscale",
-    batch_size=BATCH_SIZE,
-),
+    b, g, r = cv.split(frame)
+    b = np.roll(b, 1, axis=1)
+    r = np.roll(r, -1, axis=1)
+    frame = cv.merge([b, g, r])
 
-test_ds = tf.keras.utils.image_dataset_from_directory(
-    test_path,
-    image_size=IMG_SIZE,
-    color_mode="grayscale",
-    batch_size=BATCH_SIZE,
-)
+    frame = cv.GaussianBlur(frame, (3, 3), 0)
+    return frame
 
-
+# start kamery i detekcja twarzy
 cap = cv.VideoCapture(0)
+facecasc = cv.CascadeClassifier(cv.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
 if not cap.isOpened():
     print("Error: Could not open video.")
     exit()
 
 while True:
-    # Capture frame-by-frame
     ret, frame = cap.read()
-
     if not ret:
-        print("Error: Could not read frame.")
         break
 
-    # Convert the frame to grayscale and resize it
+    # kopia klatki z filtrem TV
+    filtered_frame = apply_old_tv_filter(frame.copy())
+
+    # konwersja do odcieni szarości i detekcja twarzy
     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-    resized = cv.resize(gray, IMG_SIZE)
-    normalized = resized / 255.0
-    input_image = normalized.reshape(1, IMG_SIZE[0], IMG_SIZE[1], 1)
+    faces = facecasc.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5)
 
-    display_frame = frame.copy()
-
-    # Update emotion with 'e'
     key = cv.waitKey(1) & 0xFF
+
+    # wciś 'e' coby zobaczyć emocje (dla kazdej twarzy na klatce)
     if key == ord('e'):
-        pred = model.predict(input_image)
-        predicted_class = class_names[np.argmax(pred)]
-    
-    if predicted_class:
-        cv.putText(display_frame, f"Emocja: {predicted_class}", (10, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-    
-    
-    cv.imshow('Live Emotion Recognition', display_frame)
-        
-    # Stop with 'q'
+        for (x, y, w, h) in faces:
+                roi_gray = gray[y:y + h, x:x + w]
+                if roi_gray.size == 0:
+                    continue
+                roi_resized = cv.resize(roi_gray, IMG_SIZE)
+                input_image = np.expand_dims(np.expand_dims(roi_resized, -1), 0)
+                prediction = model.predict(input_image, verbose=0)
+                maxindex = int(np.argmax(prediction))
+                predicted_emotion = emotion_dict[maxindex]
+                emotion_timestamp = time.time()
+                last_face_coords = (x, y, w, h)
+                break 
+
+    # rysowanie prostokątów wokół wykrytych twarzy
+    for (x, y, w, h) in faces:
+        cv.rectangle(filtered_frame, (x, y-50), (x + w, y + h + 10), (255, 0, 0), 2)
+
+    # rysowanie nazwy emocji nad twarza jesli jest wykryta i nie minęło 3 sekundy
+    # od ostatniego wykrycia (potem zniknie)
+    if predicted_emotion and (time.time() - emotion_timestamp < display_duration) and last_face_coords:
+        x, y, w, h = last_face_coords
+        cv.putText(filtered_frame, predicted_emotion, (x + 20, y - 60),
+                cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+
+
+    cv.imshow('Live Emotion Recognition', filtered_frame)
+
     if key == ord('q'):
         break
 
-cap.release() 
+cap.release()
+cv.destroyAllWindows()

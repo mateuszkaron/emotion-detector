@@ -1,6 +1,6 @@
 # TensorFlow and tf.keras imports
 import tensorflow as tf
-from tensorflow.keras import layers, models
+from tensorflow.keras import layers, models # type: ignore
 
 # Helper liblaries
 import os
@@ -8,8 +8,8 @@ import os
 # Variables
 BATCH_SIZE = 32
 IMG_SIZE = (48, 48)
-EPOCHS = 10
-class_names = ('angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral')
+EPOCHS = 50
+class_names = ('angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise')
 
 # Find path to the dataset
 project_path = os.path.dirname(os.path.abspath(__file__))
@@ -38,10 +38,8 @@ model = models.Sequential([
     layers.MaxPooling2D(),
     layers.Conv2D(64, 3, activation='relu'),
     layers.MaxPooling2D(),
-    layers.Conv2D(128, 3, activation='relu'),
-    layers.MaxPooling2D(),
     layers.Flatten(),
-    layers.Dense(128, activation='relu'),
+    layers.Dense(64, activation='relu'),
     layers.Dense(len(class_names), activation='softmax')
 ])
 
@@ -64,5 +62,5 @@ model.fit(
 
 # Save the model
 os.makedirs("models", exist_ok=True)
-model.save("models/emotion_model.h5")
+model.save("models/emotion_model_v0.03.h5")
 
