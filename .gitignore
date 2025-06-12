@@ -1,0 +1,30 @@
+# .gitignore
+# Ignore data directory with images
+/data/
+
+# Ignore npm build output
+/frontend/build/
+
+# Ignore Python build and cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+*.venv
+.env
+.venv
+/venv/
+
+# Ignore backend build output
+/backend/build/
+
+# Ignore model files (optional, if you want to keep only code)
+# /models/*.h5
+
+# Ignore logs
+nohup.out
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
