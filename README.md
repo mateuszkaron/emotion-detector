@@ -1,36 +1,88 @@
-# Emotion Detector - Deployment & Development Instructions
 
-## After cloning the repository, follow these steps:
+# 🎭 Emotion Detector
 
-1. **Install frontend dependencies:**
-   ```bash
-   cd frontend
-   npm install
-   ```
-2. **Build the frontend:**
-   ```bash
-   npm run build
-   ```
-3. **Run the backend:**
-   ```bash
-   cd ../backend
-   # (opcjonalnie) python3 -m venv venv && source venv/bin/activate
-   pip install -r requirements.txt
-   python app.py
-   ```
-4. **Run the frontend in development mode:**
-   ```bash
-   cd ../frontend
-   npm start
-   ```
+A machine learning–based web app that detects and classifies human emotions in real-time using a webcam feed. Built with Python, TensorFlow, OpenCV, and a React frontend.
 
 ---
 
-- The `data/` folder (with images) and `frontend/build/` are ignored by Git.
-- After building the frontend  (`npm run build`), the production files will appear in `frontend/build/`.
-- Always run the backend from the `backend/` directory.
-- Model files (`models/*.h5`) are tracked by Git by default (you can add them to `.gitignore` if you want to exclude them).
+## 🚀 Demo
 
-**Note:**
-- Before running the backend for the first time, make sure to install the required Python libraries (`pip install -r requirements.txt`).
-- If you want to train the model, you need to manually create and populate the `data/` folder.
+![Demo Screenshot](demo/screenshot.png)  
+*Live webcam input → Face detection → Emotion classification → Instant feedback*
+
+---
+
+## 🧠 Technologies Used
+
+### 🖥️ Frontend
+- React
+- HTML, CSS, JavaScript
+- Webpack / npm
+
+### 🧪 Backend
+- Python
+- Flask
+- TensorFlow / Keras
+- OpenCV
+- Pretrained CNN model
+
+### 💾 Other Tools
+- Git
+- VS Code
+- REST API
+- JSON
+- Webcam integration (via browser)
+
+---
+
+## ⚙️ Setup & Deployment
+
+### 1. Clone the repository:
+```bash
+git clone https://github.com/mateuszkaron/emotion-detector.git
+cd emotion-detector
+```
+
+### 2. Install frontend dependencies:
+```bash
+cd frontend
+npm install
+```
+
+### 3. Build the frontend:
+```bash
+npm run build
+```
+
+### 4. Run the backend:
+```bash
+cd ../backend
+# (optional) python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+python app.py
+```
+
+### 5. (Optional) Run frontend in dev mode:
+```bash
+cd ../frontend
+npm start
+```
+---
+
+## 📌 Notes
+
+- `frontend/build/` and `data/` are ignored by Git.
+- Trained model files (`models/*.h5`) are included by default.
+- If you're training the model yourself, you'll need to provide a labeled dataset in the `data/` folder.
+
+---
+
+## 🧪 Model Training
+
+The backend uses a CNN trained on labeled facial emotion datasets (e.g., FER2013). You can retrain the model by modifying the training script and supplying your own dataset in the `data/` folder.
+
+---
+
+## 📬 Contact
+
+Created by [Mateusz Karoń](https://www.linkedin.com/in/mateusz-karon-dev/)
